@@ -1,0 +1,209 @@
+---
+name: plain-card
+description: 简单卡片
+triggers:
+  - 简单卡片
+  - plain card
+  - 生成简单卡片
+  - 做一张卡片
+tools: [write_file, terminal, browser_navigate, browser_vision]
+---
+
+# 简单卡片生成
+
+## 概述
+
+生成简洁清爽的飞书风格卡片 PNG 图片。
+技术栈：**纯 HTML + CSS → Puppeteer 截图（2x 高清）**。
+左下角固定展示 `AI炼丹师` logo 签名。
+
+---
+
+## 步骤
+
+### 1. 整理卡片内容
+
+将信息归纳为以下区块（按需取舍）：
+- **Header**：标题、副标题、图标 emoji
+- **正文**：核心内容段落
+- **要点列表**：条目化的关键信息
+- **Footer**：固定签名（logo + `AI炼丹师`，不可修改）
+
+### 2. 编写 HTML 文件
+
+保存到 `/tmp/<name>_plain_card.html`，使用如下结构（footer 固定，必须包含）：
+
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f0f2f5;
+    padding: 32px;
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    width: 600px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .card-header {
+    background: linear-gradient(135deg, #1456F0 0%, #1890FF 100%);
+    padding: 22px 24px 20px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .header-icon { font-size: 36px; line-height: 1; }
+  .header-text h1 {
+    font-size: 20px; font-weight: 700; color: #fff;
+    letter-spacing: -0.3px; margin-bottom: 4px;
+  }
+  .header-text p { font-size: 12.5px; color: rgba(255,255,255,0.82); }
+
+  /* ── Body ── */
+  .card-body { padding: 20px 24px 8px; }
+
+  .section-title {
+    font-size: 11px; font-weight: 700; color: #1456F0;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: #e8edf5; }
+  .section { margin-bottom: 18px; }
+
+  .desc-block {
+    background: #f7f8fc;
+    border-left: 3px solid #1456F0;
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    font-size: 13.5px; color: #333; line-height: 1.75;
+  }
+
+  /* ── Footer（固定，请勿修改） ── */
+  .card-footer {
+    background: #f7f8fc; border-top: 1px solid #eaecf3;
+    padding: 11px 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .footer-logo {
+    width: 28px; height: 28px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0;
+  }
+  .footer-name {
+    font-size: 13px; font-weight: 600; color: #333;
+  }
+  .footer-right {
+    margin-left: auto;
+    font-size: 11.5px; color: #999;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- Header（根据内容替换） -->
+  <div class="card-header">
+    <div class="header-icon">✨</div>
+    <div class="header-text">
+      <h1>卡片标题</h1>
+      <p>副标题或来源</p>
+    </div>
+  </div>
+
+  <!-- Body（根据内容填充） -->
+  <div class="card-body">
+    <div class="section">
+      <div class="section-title">核心内容</div>
+      <div class="desc-block">
+        在这里填写主要内容……
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer（固定，必须保持此结构） -->
+  <div class="card-footer">
+    <img class="footer-logo" src="/Users/a10093140/Desktop/me/logo.png" alt="logo">
+    <span class="footer-name">AI炼丹师</span>
+    <span class="footer-right"><!-- 可选：日期或来源 --></span>
+  </div>
+
+</div>
+</body>
+</html>
+```
+
+> **关键约束**：
+> - `footer-logo` 的 `src` 固定为 `/Users/a10093140/Desktop/me/logo.png`
+> - `footer-name` 固定为 `AI炼丹师`
+> - 这两处**不得**根据用户输入修改
+
+### 3. 截图脚本
+
+保存到 `/tmp/screenshot_plain_card.js`：
+
+```javascript
+const puppeteer = require('/opt/homebrew/lib/node_modules/puppeteer');
+
+(async () => {
+  const browser = await puppeteer.launch({
+    headless: 'new',
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  });
+  const page = await browser.newPage();
+  const filePath = 'file:///tmp/<name>_plain_card.html';   // ← 替换文件名
+
+  await page.goto(filePath, { waitUntil: 'networkidle0' });
+
+  const dim = await page.evaluate(() => {
+    const r = document.querySelector('.card').getBoundingClientRect();
+    return { width: r.width, height: r.height };
+  });
+  await page.setViewport({
+    width: Math.ceil(dim.width) + 64,
+    height: Math.ceil(dim.height) + 64,
+    deviceScaleFactor: 2
+  });
+
+  await page.goto(filePath, { waitUntil: 'networkidle0' });
+
+  const card = await page.$('.card');
+  await card.screenshot({ path: '/tmp/<name>_plain_card.png' });  // ← 替换文件名
+
+  console.log('Done: /tmp/<name>_plain_card.png');
+  await browser.close();
+})();
+```
+
+运行：
+```bash
+node /tmp/screenshot_plain_card.js
+```
+
+### 4. 输出图片
+
+用 `MEDIA:/tmp/<name>_plain_card.png` 发送给用户。
+
+---
+
+## 注意事项
+
+- **Footer 不可定制**：logo 和名字 `AI炼丹师` 固定，不随用户要求变化
+- **Logo 路径**：`/Users/a10093140/Desktop/me/logo.png`（本地绝对路径，Puppeteer 可直接读取）
+- **Puppeteer 路径**：`/opt/homebrew/lib/node_modules/puppeteer`（macOS Homebrew 安装）
+- **中文字体**：`-apple-system, "PingFang SC"` 自动支持中文
+- **卡片宽度固定 600px**，高度自适应，2x 截图后实际 1200px 宽
+
+---
+
+## 参考文件
+
+- `references/card-example.md`：完整卡片 HTML 示例
+- `references/card-format.md`：SVG / HTML 卡片格式规范
+- `assets/logo.png`：签名 logo 备份
