@@ -19,10 +19,13 @@
 
 | 属性 | 值 | 说明 |
 |------|----|------|
-| footer logo src | `/Users/a10093140/Desktop/me/logo.png` | 绝对路径，不可更改 |
+| footer logo src | `assets/logo_base64.txt` 的完整内容 | base64 data URI，已提交到 git，CI/CD 可用 |
 | footer 名字 | `AI炼丹师` | 不可根据用户输入修改 |
 | 卡片宽度 | `600px` | 固定，高度自适应 |
 | 截图倍率 | `deviceScaleFactor: 2` | 输出 1200px 宽高清图 |
+
+> **重要**：logo 以 base64 data URI 形式内嵌到 HTML 的 `<img src="...">` 中，
+> 不依赖任何本地文件路径，GitHub Actions 环境无需额外配置即可渲染。
 
 ---
 
@@ -88,9 +91,17 @@
 
 ## Footer（固定结构，复制粘贴，不得修改）
 
+读取 base64（Python）：
+```python
+with open("skills/plain-card/assets/logo_base64.txt") as f:
+    logo_data_uri = f.read().strip()
+html = html_template.replace("LOGO_SRC", logo_data_uri)
+```
+
+HTML 模板（`LOGO_SRC` 在写文件前替换为实际 data URI）：
 ```html
 <div class="card-footer">
-  <img class="footer-logo" src="/Users/a10093140/Desktop/me/logo.png" alt="logo">
+  <img class="footer-logo" src="LOGO_SRC" alt="logo">
   <span class="footer-name">AI炼丹师</span>
   <span class="footer-right"><!-- 可选：日期、来源等 --></span>
 </div>

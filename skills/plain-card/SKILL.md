@@ -17,6 +17,8 @@ tools: [write_file, terminal, browser_navigate, browser_vision]
 技术栈：**纯 HTML + CSS → Puppeteer 截图（2x 高清）**。
 左下角固定展示 `AI炼丹师` logo 签名。
 
+Logo 已内嵌为 base64 data URI，无需任何外部文件，GitHub Actions 环境可直接使用。
+
 ---
 
 ## 步骤
@@ -96,13 +98,8 @@ tools: [write_file, terminal, browser_navigate, browser_vision]
     width: 28px; height: 28px; border-radius: 50%;
     object-fit: cover; flex-shrink: 0;
   }
-  .footer-name {
-    font-size: 13px; font-weight: 600; color: #333;
-  }
-  .footer-right {
-    margin-left: auto;
-    font-size: 11.5px; color: #999;
-  }
+  .footer-name { font-size: 13px; font-weight: 600; color: #333; }
+  .footer-right { margin-left: auto; font-size: 11.5px; color: #999; }
 </style>
 </head>
 <body>
@@ -127,9 +124,9 @@ tools: [write_file, terminal, browser_navigate, browser_vision]
     </div>
   </div>
 
-  <!-- Footer（固定，必须保持此结构） -->
+  <!-- Footer（固定，必须保持此结构，src 为 base64 data URI） -->
   <div class="card-footer">
-    <img class="footer-logo" src="/Users/a10093140/Desktop/me/logo.png" alt="logo">
+    <img class="footer-logo" src="LOGO_DATA_URI_PLACEHOLDER" alt="logo">
     <span class="footer-name">AI炼丹师</span>
     <span class="footer-right"><!-- 可选：日期或来源 --></span>
   </div>
@@ -140,21 +137,45 @@ tools: [write_file, terminal, browser_navigate, browser_vision]
 ```
 
 > **关键约束**：
-> - `footer-logo` 的 `src` 固定为 `/Users/a10093140/Desktop/me/logo.png`
+> - `footer-logo` 的 `src` 固定为仓库内 base64 data URI（见 `assets/logo_base64.txt`），**不得**替换为本地路径
 > - `footer-name` 固定为 `AI炼丹师`
-> - 这两处**不得**根据用户输入修改
+> - 生成 HTML 时，将 `LOGO_DATA_URI_PLACEHOLDER` 替换为 `assets/logo_base64.txt` 的完整内容
+
+### 2a. 读取 logo base64（替换 placeholder）
+
+```python
+import os
+
+# 读取 base64（相对于 skill 目录，或用绝对路径）
+skill_dir = os.path.dirname(os.path.abspath(__file__))  # 调整为实际路径
+logo_b64_path = os.path.join(skill_dir, "assets", "logo_base64.txt")
+with open(logo_b64_path) as f:
+    logo_data_uri = f.read().strip()
+
+# 替换 HTML 模板中的占位符
+html = html_template.replace("LOGO_DATA_URI_PLACEHOLDER", logo_data_uri)
+```
+
+或者直接在生成卡片时内联读取：
+
+```bash
+LOGO_B64=$(cat skills/plain-card/assets/logo_base64.txt)
+# 然后在 Python/Node 脚本中读取该文件注入 HTML
+```
 
 ### 3. 截图脚本
 
 保存到 `/tmp/screenshot_plain_card.js`：
 
 ```javascript
-const puppeteer = require('/opt/homebrew/lib/node_modules/puppeteer');
+const puppeteer = require('puppeteer');  // GitHub Actions: npm install puppeteer
+// 本地 macOS: require('/opt/homebrew/lib/node_modules/puppeteer')
 
 (async () => {
   const browser = await puppeteer.launch({
     headless: 'new',
     args: ['--no-sandbox', '--disable-setuid-sandbox']
+    // 无需 --allow-file-access-from-files，因为 logo 已内嵌为 data URI
   });
   const page = await browser.newPage();
   const filePath = 'file:///tmp/<name>_plain_card.html';   // ← 替换文件名
@@ -195,15 +216,17 @@ node /tmp/screenshot_plain_card.js
 ## 注意事项
 
 - **Footer 不可定制**：logo 和名字 `AI炼丹师` 固定，不随用户要求变化
-- **Logo 路径**：`/Users/a10093140/Desktop/me/logo.png`（本地绝对路径，Puppeteer 可直接读取）
-- **Puppeteer 路径**：`/opt/homebrew/lib/node_modules/puppeteer`（macOS Homebrew 安装）
-- **中文字体**：`-apple-system, "PingFang SC"` 自动支持中文
+- **Logo 为 base64 内嵌**：无需本地文件路径，CI/CD 环境直接可用
+- **logo_base64.txt 位置**：`skills/plain-card/assets/logo_base64.txt`（已提交到 git）
+- **Puppeteer 路径**：本地 macOS 用 `/opt/homebrew/lib/node_modules/puppeteer`；GitHub Actions 用 `npm install puppeteer` 后直接 `require('puppeteer')`
+- **中文字体**：`-apple-system, "PingFang SC"` 自动支持中文；GitHub Actions 需安装 `fonts-noto-cjk`
 - **卡片宽度固定 600px**，高度自适应，2x 截图后实际 1200px 宽
 
 ---
 
 ## 参考文件
 
-- `references/card-example.md`：完整卡片 HTML 示例
-- `references/card-format.md`：SVG / HTML 卡片格式规范
-- `assets/logo.png`：签名 logo 备份
+- `references/card-example.md`：完整卡片 HTML 示例（含 base64 logo）
+- `references/card-format.md`：格式规范与组件库
+- `assets/logo.png`：logo 原始文件（64×64 PNG）
+- `assets/logo_base64.txt`：logo 的 base64 data URI（在 HTML 中直接使用）

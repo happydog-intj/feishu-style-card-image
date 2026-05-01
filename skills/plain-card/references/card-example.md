@@ -1,5 +1,10 @@
 # 简单卡片示例
 
+> **说明**：所有示例中 footer logo 使用 base64 data URI（无需本地文件，CI/CD 可直接使用）。
+> 生成 HTML 时，将 `LOGO_SRC` 替换为 `assets/logo_base64.txt` 的完整内容。
+
+---
+
 ## 示例 1：知识总结卡
 
 ```html
@@ -10,21 +15,16 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #f0f2f5;
-    padding: 32px;
+    background: #f0f2f5; padding: 32px;
     font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
   }
   .card {
-    background: #fff;
-    border-radius: 12px;
-    width: 600px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-    overflow: hidden;
+    background: #fff; border-radius: 12px; width: 600px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.10); overflow: hidden;
   }
   .card-header {
     background: linear-gradient(135deg, #1456F0 0%, #1890FF 100%);
-    padding: 22px 24px 20px;
-    display: flex; align-items: center; gap: 14px;
+    padding: 22px 24px 20px; display: flex; align-items: center; gap: 14px;
   }
   .header-icon { font-size: 36px; }
   .header-text h1 { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 4px; }
@@ -39,8 +39,8 @@
   .section-title::after { content: ''; flex: 1; height: 1px; background: #e8edf5; }
   .desc-block {
     background: #f7f8fc; border-left: 3px solid #1456F0;
-    border-radius: 0 8px 8px 0;
-    padding: 12px 14px; font-size: 13.5px; color: #333; line-height: 1.75;
+    border-radius: 0 8px 8px 0; padding: 12px 14px;
+    font-size: 13.5px; color: #333; line-height: 1.75;
   }
   .point-list { list-style: none; padding: 0; }
   .point-list li {
@@ -49,12 +49,12 @@
     padding: 6px 0; border-bottom: 1px solid #f5f5f5;
   }
   .point-list li:last-child { border-bottom: none; }
-  .point-list li::before { content: '▸'; color: #1456F0; flex-shrink: 0; margin-top: 1px; }
+  .point-list li::before { content: "▸"; color: #1456F0; flex-shrink: 0; margin-top: 1px; }
   .card-footer {
     background: #f7f8fc; border-top: 1px solid #eaecf3;
     padding: 11px 20px; display: flex; align-items: center; gap: 10px;
   }
-  .footer-logo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+  .footer-logo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .footer-name { font-size: 13px; font-weight: 600; color: #333; }
   .footer-right { margin-left: auto; font-size: 11.5px; color: #999; }
 </style>
@@ -86,7 +86,7 @@
     </div>
   </div>
   <div class="card-footer">
-    <img class="footer-logo" src="/Users/a10093140/Desktop/me/logo.png" alt="logo">
+    <img class="footer-logo" src="LOGO_SRC" alt="logo">
     <span class="footer-name">AI炼丹师</span>
     <span class="footer-right">2025</span>
   </div>
@@ -134,7 +134,7 @@
     background: #f7f8fc; border-top: 1px solid #eaecf3;
     padding: 11px 20px; display: flex; align-items: center; gap: 10px;
   }
-  .footer-logo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+  .footer-logo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
   .footer-name { font-size: 13px; font-weight: 600; color: #333; }
   .footer-right { margin-left: auto; font-size: 11.5px; color: #999; }
 </style>
@@ -173,7 +173,7 @@
     </div>
   </div>
   <div class="card-footer">
-    <img class="footer-logo" src="/Users/a10093140/Desktop/me/logo.png" alt="logo">
+    <img class="footer-logo" src="LOGO_SRC" alt="logo">
     <span class="footer-name">AI炼丹师</span>
     <span class="footer-right">github.com/obra/superpowers</span>
   </div>
@@ -181,3 +181,5 @@
 </body>
 </html>
 ```
+
+> 将两个示例中的 `LOGO_SRC` 替换为 `assets/logo_base64.txt` 的完整内容（`data:image/png;base64,...`）
